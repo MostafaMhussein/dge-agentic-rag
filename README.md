@@ -1,4 +1,4 @@
-# Abu Dhabi Policy Assistant
+# ADG Assistant
 
 A multi-agent RAG system for querying government policy documents. Built with CrewAI, LlamaIndex, and Ollama for fully local inference.
 
