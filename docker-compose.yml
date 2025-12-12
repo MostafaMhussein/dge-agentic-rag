@@ -1,0 +1,103 @@
+services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    container_name: rag-postgres
+    environment:
+      POSTGRES_DB: ragdb
+      POSTGRES_USER: raguser
+      POSTGRES_PASSWORD: ragpass
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./scripts/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U raguser -d ragdb"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  ollama:
+    image: ollama/ollama:latest
+    container_name: rag-ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    restart: unless-stopped
+
+  phoenix:
+    image: arizephoenix/phoenix:latest
+    container_name: rag-phoenix
+    environment:
+      - PHOENIX_PROJECT_NAME=abu-dhabi-rag
+    ports:
+      - "6006:6006"
+      - "4317:4317"
+    restart: unless-stopped
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    env_file:
+      - .env
+    container_name: rag-backend
+    environment:
+      - POSTGRES_DB=ragdb
+      - POSTGRES_USER=raguser
+      - POSTGRES_PASSWORD=ragpass
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
+      - OLLAMA_BASE_URL=http://ollama:11434
+      - OLLAMA_MODEL=llama3.1
+      - EMBED_MODEL=BAAI/bge-base-en-v1.5
+      - EMBED_DIM=768
+      - PHOENIX_ENDPOINT=http://phoenix:4317
+      - PHOENIX_PROJECT_NAME=abu-dhabi-rag
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+    volumes:
+      - ./backend:/app/backend
+      - ./documents:/app/documents
+      - ./indexer.py:/app/indexer.py
+      - ./evaluator.py:/app/evaluator.py
+    depends_on:
+      postgres:
+        condition: service_healthy
+      ollama:
+        condition: service_started
+      phoenix:
+        condition: service_started
+    ports:
+      - "8000:8000"
+    restart: unless-stopped
+
+  webui:
+    image: ghcr.io/open-webui/open-webui:main
+    container_name: rag-webui
+    depends_on:
+      - backend
+    environment:
+      - WEBUI_AUTH=false
+      - OPENAI_API_BASE_URL=http://backend:8000/v1
+      - OPENAI_API_KEY=not-needed
+      - ENABLE_OLLAMA_API=false
+      - WEBUI_NAME=Policy Assistant
+    ports:
+      - "3000:8080"
+    volumes:
+      - webui_data:/app/backend/data
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  ollama_data:
+  webui_data:

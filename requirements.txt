@@ -1,0 +1,47 @@
+# Web framework
+fastapi>=0.104.0
+uvicorn>=0.24.0
+pydantic>=2.0.0
+pydantic-settings>=2.0.0
+
+# Database
+psycopg2-binary>=2.9.9
+pgvector>=0.2.4
+
+# LlamaIndex core
+llama-index-core>=0.11.0
+llama-index-vector-stores-postgres>=0.2.0
+llama-index-embeddings-huggingface>=0.3.0
+llama-index-llms-ollama>=0.3.0
+llama-index-postprocessor-flag-embedding-reranker>=0.2.0
+llama-index-retrievers-bm25>=0.3.0
+llama-index-readers-docling>=0.1.0
+
+# Reranker
+FlagEmbedding>=1.2.0
+
+# Agent framework
+crewai>=0.80.0,<1.0.0
+litellm>=1.50.0,<2.0.0
+
+# Document processing
+docling>=2.10.0
+transformers>=4.47.0
+
+# Observability
+arize-phoenix>=5.0.0
+arize-phoenix-client>=1.0.0
+opentelemetry-api>=1.20.0
+opentelemetry-sdk>=1.20.0
+opentelemetry-exporter-otlp-proto-grpc>=1.20.0
+openinference-instrumentation-llama-index>=2.0.0
+
+# Evaluation
+ragas>=0.1.0
+langchain-openai>=0.1.0
+datasets>=2.14.0
+
+# Utilities
+numpy<2.0.0
+pandas>=2.0.0
+requests>=2.31.0
